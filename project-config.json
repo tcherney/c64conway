@@ -1,0 +1,13 @@
+{
+    "name": "c64conway",
+    "description": "Project c64conway",
+    "toolkit": "cc65",
+    "sources": [
+        "src/main.c"
+    ],
+    "build": "debug",
+    "definitions": [],
+    "includes": [],
+    "args": [],
+    "compiler": ""
+}
