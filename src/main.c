@@ -4,15 +4,28 @@ char* screen = (char*)(1024);
 unsigned char* color = (unsigned char*)(55296);
 
 char* joystick = (char*)(56321);
-unsigned char buffer[1000];
+
+short live_list[1000];
+short neighbor_list[1000];
+short neighbor_list_length;
+char neighbor_values[1000];
+short live_list_length;
 #define block_char 224
 #define empty_char 96
 #define place_color 2
 #define block_color 5
 
+inline void add_neighbor(short indx) {
+    if (neighbor_values[indx] == 0) {
+        neighbor_list[neighbor_list_length] = indx;
+        neighbor_list_length++;
+    }
+    neighbor_values[indx]++;
+}
+
 int main() {
     short i;
-    unsigned char num_neighbors;
+
     unsigned short placement_index;
     int input_delay;
     char left;
@@ -32,9 +45,6 @@ int main() {
     up = 0;
     down = 0;
     fire = 0;
-    for (i = 0; i < 1000; ++i) {
-        buffer[i] = empty_char;
-    }
     while (placement_index < 1000) {
         if ((*joystick & 0x01) == 0) {
             if (up == 0) {
@@ -98,7 +108,8 @@ int main() {
         }
         if ((*joystick & 0x10) == 0) {
             if (fire == 0) {
-                if (screen[placement_index] == block_char) {
+                if (screen[placement_index] == block_char &&
+                    color[placement_index] == block_color) {
                     screen[placement_index] = empty_char;
                 } else {
                     screen[placement_index] = block_char;
@@ -110,30 +121,48 @@ int main() {
             fire = 0;
         }
     }
-    for (;;) {
-        for (i = 0; i < 1000; ++i) {
-            num_neighbors = 0;
-            if (screen[i - 41] == block_char) num_neighbors++;
-            if (screen[i - 40] == block_char) num_neighbors++;
-            if (screen[i - 39] == block_char) num_neighbors++;
-            if (screen[i - 1] == block_char) num_neighbors++;
-            if (screen[i + 1] == block_char) num_neighbors++;
-            if (screen[i + 39] == block_char) num_neighbors++;
-            if (screen[i + 40] == block_char) num_neighbors++;
-            if (screen[i + 41] == block_char) num_neighbors++;
-            if (num_neighbors < 2) {
-                buffer[i] = empty_char;
-            } else if (num_neighbors > 3) {
-                buffer[i] = empty_char;
-            } else if (num_neighbors == 3) {
-                buffer[i] = block_char;
-            } else {
-                buffer[i] = screen[i];
-            }
+    if (screen[placement_index] == block_char &&
+        color[placement_index] == place_color) {
+        screen[placement_index] = empty_char;
+    }
+    for (i = 0; i < 1000; ++i) {
+        if (screen[i] == block_char) {
+            live_list[live_list_length] = i;
+            live_list_length++;
         }
-        for (i = 0; i < 1000; ++i) {
-            screen[i] = buffer[i];
-            if (buffer[i] == block_char) color[i] = block_color;
+        neighbor_values[i] = 0;
+        neighbor_list[i] = -1;
+    }
+    for (;;) {
+        neighbor_list_length = 0;
+        for (i = 0; i < live_list_length; ++i) {
+            add_neighbor(live_list[i] - 41);
+            add_neighbor(live_list[i] - 40);
+            add_neighbor(live_list[i] - 39);
+            add_neighbor(live_list[i] - 1);
+            add_neighbor(live_list[i] + 1);
+            add_neighbor(live_list[i] + 39);
+            add_neighbor(live_list[i] + 40);
+            add_neighbor(live_list[i] + 41);
+        }
+        live_list_length = 0;
+        for (i = 0; i < neighbor_list_length; i++) {
+            if (neighbor_values[neighbor_list[i]] < 2) {
+                screen[neighbor_list[i]] = empty_char;
+            } else if (neighbor_values[neighbor_list[i]] > 3) {
+                screen[neighbor_list[i]] = empty_char;
+            } else if (neighbor_values[neighbor_list[i]] == 3) {
+                screen[neighbor_list[i]] = block_char;
+                color[neighbor_list[i]] = block_color;
+                live_list[live_list_length] = neighbor_list[i];
+                live_list_length++;
+            } else {
+                if (screen[neighbor_list[i]] == block_char) {
+                    live_list[live_list_length] = neighbor_list[i];
+                    live_list_length++;
+                }
+            }
+            neighbor_values[neighbor_list[i]] = 0;
         }
     }
 
