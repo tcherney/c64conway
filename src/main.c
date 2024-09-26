@@ -9,6 +9,7 @@ short live_list[1000];
 short neighbor_list[1000];
 short neighbor_list_length;
 char neighbor_values[1000];
+char last_buffer[1000];
 short live_list_length;
 char block_char = 224;
 char empty_char = 96;
@@ -52,6 +53,54 @@ inline void add_neighbor(short indx) {
         neighbor_values[indx] = 0;
     }
     neighbor_values[indx]++;
+}
+
+inline void naive_sim() {
+    char num_neighbors;
+    char* buffer;
+
+    buffer = neighbor_values;
+    for (i = 0; i < 1000; ++i) {
+        buffer[i] = screen[i];
+    }
+    for (EVER) {
+        for (i = 0; i < 1000; ++i) {
+            last_buffer[i] = buffer[i];
+        }
+        for (i = 0; i < 1000; ++i) {
+            num_neighbors = 0;
+            if (last_buffer[i - 41] == block_char) num_neighbors++;
+            if (last_buffer[i - 40] == block_char) num_neighbors++;
+            if (last_buffer[i - 39] == block_char) num_neighbors++;
+            if (last_buffer[i - 1] == block_char) num_neighbors++;
+            if (last_buffer[i + 1] == block_char) num_neighbors++;
+            if (last_buffer[i + 39] == block_char) num_neighbors++;
+            if (last_buffer[i + 40] == block_char) num_neighbors++;
+            if (last_buffer[i + 41] == block_char) num_neighbors++;
+            if (num_neighbors < 2) {
+                screen[i] = empty_char;
+                buffer[i] = empty_char;
+            } else if (num_neighbors > 3) {
+                screen[i] = empty_char;
+                buffer[i] = empty_char;
+            } else if (num_neighbors == 3) {
+                screen[i] = block_char;
+                color[i] = block_color;
+                buffer[i] = block_char;
+            } else {
+                screen[i] = last_buffer[i];
+            }
+        }
+        if ((*joystick & 0x10) == 0) {
+            if (fire == 0) {
+                placement_index = 0;
+                fire = 1;
+                break;
+            }
+        } else {
+            fire = 0;
+        }
+    }
 }
 
 inline void neighbor_list_sim() {
